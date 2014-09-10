@@ -84,3 +84,49 @@ func jsonobj(b []byte) interface{} {
 	json.NewDecoder(bytes.NewReader(b)).Decode(&v)
 	return v
 }
+
+func TestDefaultWriteHeader(t *testing.T) {
+
+	w := httptest.NewRecorder()
+	respond.DefaultOptions.WriteHeader(&respond.Ctx{W: w}, http.StatusTeapot)
+	require.Equal(t, http.StatusTeapot, w.Code)
+
+}
+
+func TestDefaultWriteData(t *testing.T) {
+
+	r, _ := http.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+	data := map[string]interface{}{"one": 1}
+	err := respond.DefaultOptions.WriteData(&respond.Ctx{W: w, R: r, With: &respond.With{}}, data)
+	require.NoError(t, err)
+	require.Equal(t, w.Body.String(), "{\"one\":1}\n")
+
+}
+
+func TestDefaultEncoder(t *testing.T) {
+
+	w := httptest.NewRecorder()
+
+	r, _ := http.NewRequest("GET", "/", nil)
+	r.Header.Set("Accept", "application/json")
+	e, err := respond.DefaultOptions.Encoder(&respond.Ctx{W: w, R: r, With: &respond.With{}})
+	require.NoError(t, err)
+	require.Equal(t, e, respond.JSONEncoder)
+
+	r, _ = http.NewRequest("GET", "/", nil)
+	r.Header.Set("Accept", "")
+	e, err = respond.DefaultOptions.Encoder(&respond.Ctx{W: w, R: r, With: &respond.With{}})
+	require.NoError(t, err)
+	require.Equal(t, e, respond.JSONEncoder)
+
+}
+
+func TestJSONEncoder(t *testing.T) {
+
+	var buf bytes.Buffer
+	data := map[string]interface{}{"one": 1}
+	respond.JSONEncoder.Encode(&buf, data)
+	require.Equal(t, buf.String(), "{\"one\":1}\n")
+
+}
