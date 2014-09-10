@@ -6,8 +6,8 @@
 //
 //     // with specific status
 //     respond.With{
-//       Data:obj,
-//       Status:http.StatusCreated,
+//       Data: obj,
+//       Status: http.StatusCreated,
 //     }.To(w,r)
 //
 //     // adding a default header
@@ -15,9 +15,18 @@
 //
 //     // adding a specific header
 //     respond.With{
-//       Data:obj,
-//       Status:http.StatusCreated,
-//       Headers:map[string][]string{"X-RateLimit-Remaining": []string{remaining}},
+//       Data: obj,
+//       Status: http.StatusCreated,
+//       Headers: map[string][]string{"X-RateLimit-Remaining": []string{remaining}},
 //     }.To(w,r)
 //
+//     // your own options for specific responses
+//     opts := respond.DefaultOptions.Copy()
+//     opts.WriteData = func(c *respond.Ctx, data interface{}) error {
+//       /* custom write code */
+//     }
+//     respond.With{
+//       Data: obj,
+//       Options: opts,
+//     }
 package respond

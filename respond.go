@@ -85,6 +85,7 @@ type Options struct {
 
 // Copy makes a copy of the options allowing the returning object
 // to be modified without affecting the original.
+//     MyOptions := DefaultOptions.Copy()
 func (o *Options) Copy() *Options {
 	return &Options{
 		Encoders:       o.Encoders,
@@ -135,13 +136,13 @@ func init() {
 	}
 }
 
-// SetHeadersOverride is a SetHeaders func that overrides
+// SetHeadersOverride is an Options.SetHeaders func that overrides
 // DefaultHeaders with explicit ones.
 func SetHeadersOverride(c *Ctx) {
 	setHeaders(c, true)
 }
 
-// SetHeadersAggregate is a SetHeaders func that adds
+// SetHeadersAggregate is an Options.SetHeaders func that adds
 // explicit headers to DefaultHeaders.
 func SetHeadersAggregate(c *Ctx) {
 	setHeaders(c, false)

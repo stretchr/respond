@@ -177,3 +177,13 @@ func TestDefaultHeaders(t *testing.T) {
 	require.Equal(t, "1.0", w.HeaderMap.Get("X-App-Version"))
 
 }
+
+func TestOptionsCopy(t *testing.T) {
+
+	o1 := respond.DefaultOptions
+	o2 := o1.Copy()
+
+	require.Equal(t, o1, o2)
+	require.NotEqual(t, &o1, &o2)
+
+}
