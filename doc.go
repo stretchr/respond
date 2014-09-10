@@ -5,6 +5,9 @@
 //     respond.With{Data:obj}.To(w,r)
 //
 //     // with specific status
-//     respond.With{Data:obj, Status:http.StatusCreated}.To(w,r)
+//     respond.With{
+//       Data:obj,
+//       Status:http.StatusCreated,
+//     }.To(w,r)
 //
 package respond
