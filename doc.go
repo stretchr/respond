@@ -28,5 +28,5 @@
 //     respond.With{
 //       Data: obj,
 //       Options: opts,
-//     }
+//     }.To(w, r)
 package respond
