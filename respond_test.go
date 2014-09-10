@@ -122,6 +122,19 @@ func TestDefaultEncoder(t *testing.T) {
 
 }
 
+func TestEncoder(t *testing.T) {
+
+	w := httptest.NewRecorder()
+
+	r, _ := http.NewRequest("GET", "/", nil)
+	r.Header.Set("Accept", "application/JSON")
+	respond.DefaultOptions.DefaultEncoder = nil
+	e, err := respond.DefaultOptions.Encoder(&respond.Ctx{W: w, R: r, With: &respond.With{}})
+	require.NoError(t, err)
+	require.Equal(t, e, respond.JSONEncoder)
+
+}
+
 func TestJSONEncoder(t *testing.T) {
 
 	var buf bytes.Buffer

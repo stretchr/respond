@@ -126,9 +126,9 @@ func init() {
 	}
 	DefaultOptions.Encoder = func(c *Ctx) (Encoder, error) {
 		opts := options(c.With)
-		accept := c.R.Header.Get("Accept")
+		accept := strings.ToLower(c.R.Header.Get("Accept"))
 		for contentType, enc := range opts.Encoders {
-			if strings.Contains(accept, contentType) {
+			if strings.Contains(accept, strings.ToLower(contentType)) {
 				return enc, nil
 			}
 		}
