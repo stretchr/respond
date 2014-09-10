@@ -88,7 +88,7 @@ func jsonobj(b []byte) interface{} {
 func TestDefaultWriteHeader(t *testing.T) {
 
 	w := httptest.NewRecorder()
-	respond.DefaultOptions.WriteHeader(&respond.Ctx{W: w}, http.StatusTeapot)
+	respond.DefaultOptions.WriteHeader(&respond.Ctx{W: w, With: &respond.With{}}, http.StatusTeapot)
 	require.Equal(t, http.StatusTeapot, w.Code)
 
 }
@@ -128,5 +128,52 @@ func TestJSONEncoder(t *testing.T) {
 	data := map[string]interface{}{"one": 1}
 	respond.JSONEncoder.Encode(&buf, data)
 	require.Equal(t, buf.String(), "{\"one\":1}\n")
+
+}
+
+func TestSetHeadersOverride(t *testing.T) {
+
+	r, _ := http.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+	opts := respond.DefaultOptions.Copy()
+	opts.DefaultHeaders = map[string][]string{"X-App-Source": []string{"default"}}
+	opts.SetHeaders = respond.SetHeadersOverride
+	respond.With{
+		Options: opts,
+		Headers: map[string][]string{"X-App-Source": []string{"explicit"}},
+	}.To(w, r)
+
+	require.Equal(t, 1, len(w.HeaderMap["X-App-Source"]))
+	require.Equal(t, "explicit", w.HeaderMap["X-App-Source"][0])
+
+}
+
+func TestSetHeadersAggregate(t *testing.T) {
+
+	r, _ := http.NewRequest("GET", "/", nil)
+	w := httptest.NewRecorder()
+	opts := respond.DefaultOptions.Copy()
+	opts.DefaultHeaders = map[string][]string{"X-App-Source": []string{"default"}}
+	opts.SetHeaders = respond.SetHeadersAggregate
+	respond.With{
+		Options: opts,
+		Headers: map[string][]string{"X-App-Source": []string{"explicit"}},
+	}.To(w, r)
+
+	require.Equal(t, 2, len(w.HeaderMap["X-App-Source"]))
+	require.Equal(t, "default", w.HeaderMap["X-App-Source"][0])
+	require.Equal(t, "explicit", w.HeaderMap["X-App-Source"][1])
+
+}
+
+func TestDefaultHeaders(t *testing.T) {
+
+	respond.DefaultOptions.DefaultHeaders = map[string][]string{"X-App-Version": []string{"1.0"}}
+	w := httptest.NewRecorder()
+	r, _ := http.NewRequest("GET", "/", nil)
+
+	respond.With{}.To(w, r)
+
+	require.Equal(t, "1.0", w.HeaderMap.Get("X-App-Version"))
 
 }

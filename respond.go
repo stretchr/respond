@@ -14,6 +14,9 @@ type With struct {
 	Data interface{}
 	// Status is the HTTP status to respond with.  Use http.Status*
 	Status int
+	// Headers represents explicit HTTP headers that will be send
+	// along with the response.
+	Headers http.Header
 	// Options are the Options to use when responding.
 	// DefaultOptions are used by default.
 	Options *Options
@@ -56,6 +59,9 @@ func options(with *With) *Options {
 type Options struct {
 	// Encoders represents a map of content types to Encoder objects.
 	Encoders map[string]Encoder
+	// SetHeaders will set the headers on the ResponseWriter using the
+	// DefaultHeaders first, followed by any explicit headers.
+	SetHeaders func(c *Ctx)
 	// WriteHeader writes the header to the http.ResponseWriter.
 	WriteHeader func(c *Ctx, code int)
 	// WriteData writes the data to the http.ResponseWriter.
@@ -68,6 +74,28 @@ type Options struct {
 	// DefaultEncoder is the default Encoder to use when none
 	// is specified.
 	DefaultEncoder Encoder
+	// DefaultHeaders represents the default HTTP headers to send
+	// with each request. DefaultHeaders will be merged with the
+	// explicit Headers when responding.
+	// DefaultHeaders will be overridden by any explicit headers
+	// if the keys match by default, do SetHeaders = SetHeadersAggregate
+	// to add the values instead.
+	DefaultHeaders http.Header
+}
+
+// Copy makes a copy of the options allowing the returning object
+// to be modified without affecting the original.
+func (o *Options) Copy() *Options {
+	return &Options{
+		Encoders:       o.Encoders,
+		SetHeaders:     o.SetHeaders,
+		WriteHeader:    o.WriteHeader,
+		WriteData:      o.WriteData,
+		Encoder:        o.Encoder,
+		DefaultStatus:  o.DefaultStatus,
+		DefaultEncoder: o.DefaultEncoder,
+		DefaultHeaders: o.DefaultHeaders,
+	}
 }
 
 // DefaultOptions represents the default options that will be
@@ -80,7 +108,9 @@ func init() {
 	JSONEncoder = (*jsonEncoder)(nil)
 	DefaultOptions = &Options{
 		DefaultStatus: http.StatusOK,
+		SetHeaders:    SetHeadersOverride,
 		WriteHeader: func(c *Ctx, code int) {
+			options(c.With).SetHeaders(c)
 			c.W.WriteHeader(code)
 		},
 		WriteData: func(c *Ctx, data interface{}) error {
@@ -102,6 +132,36 @@ func init() {
 			}
 		}
 		return DefaultOptions.DefaultEncoder, nil
+	}
+}
+
+// SetHeadersOverride is a SetHeaders func that overrides
+// DefaultHeaders with explicit ones.
+func SetHeadersOverride(c *Ctx) {
+	setHeaders(c, true)
+}
+
+// SetHeadersAggregate is a SetHeaders func that adds
+// explicit headers to DefaultHeaders.
+func SetHeadersAggregate(c *Ctx) {
+	setHeaders(c, false)
+}
+
+// setHeaders sets the headers, optionally overriding the
+// defaults or not.
+func setHeaders(c *Ctx, override bool) {
+	for key, vals := range options(c.With).DefaultHeaders {
+		for _, val := range vals {
+			c.W.Header().Add(key, val)
+		}
+	}
+	for key, vals := range c.With.Headers {
+		if override {
+			c.W.Header().Del(key)
+		}
+		for _, val := range vals {
+			c.W.Header().Add(key, val)
+		}
 	}
 }
 

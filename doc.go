@@ -10,4 +10,14 @@
 //       Status:http.StatusCreated,
 //     }.To(w,r)
 //
+//     // adding a default header
+//     respond.DefaultOptions.Headers.Set("X-App-Version", "1.0")
+//
+//     // adding a specific header
+//     respond.With{
+//       Data:obj,
+//       Status:http.StatusCreated,
+//       Headers:map[string][]string{"X-RateLimit-Remaining": []string{remaining}},
+//     }.To(w,r)
+//
 package respond
